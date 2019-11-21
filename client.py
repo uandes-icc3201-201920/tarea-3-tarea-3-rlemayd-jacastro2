@@ -11,31 +11,40 @@ sock_dir = socket.gethostbyname(opt)
 PORT = 8080
 sock = 0                                    #numero en el cual guardaremos el valor que nos retorne la funcion socket()
 conectado = False
-
+header = str(PORT)+","+str(sock_dir)
 while cmd != "quit":
+
     cmd = input(">")
     if cmd == "connect":       #veo si el comando del usuario es connect
+        oper = "connect"
+        data = None
         if conectado == 1:
             print("Ya estas conectado al servidor")
         else:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        #Creamos el socket
             cliente_addr = (sock_dir, PORT)
-            if sock.connect(cliente_addr) < 0:
-                print("Conexion fallida")
-                exit()
+            sock.connect(cliente_addr)
+
+            msg = header+"/"+oper+"/"+str(data)
             print("Conexión exitosa con el servidor!")
             conectado = True
-            sock.send("conectado".encode())
+            sock.send(msg.encode())
 
     elif cmd == "disconnect" and conectado:                      #veo si el comando del usuario es disconnect
-        sock.send("desconectado".encode())
+        oper = "disconnect"
+        data = None
+        msg = header + "/" + oper + "/" + str(data)
+        sock.send(msg.encode())
         sock.close()
         conectado = False;
         print("Socket desconectado!")
 
     elif cmd == "list" and conectado:                            #veo si el comando del usuairo es list
         print("Lista de claves:")
-        sock.send("list".encode())
+        oper = "list"
+        data = None
+        msg = header + "/" + oper + "/" + str(data)
+        sock.send(msg.encode())
 
         buffer = sock.recv(4096).decode()
         print(buffer)                                                       #NO ESTOY SEGURO SI ES ASI
@@ -46,42 +55,61 @@ while cmd != "quit":
         if val[0] == "insert" and conectado:
             val1 = val[1].split(",")
             if len(val1) == 1:
-                msg = "1;"+val1[0]
+                oper = "insert"
+                data = str(val1[0])
+                msg = header + "/" + oper + "/" + str(data)
                 sock.send(msg.encode())
+
                 buffer = sock.recv(4096).decode()
                 print(buffer)
 
             elif len(val1) == 2:
-                msg = "2;" + val1[0] + ";" + val1[1] + ")"
+                oper = "insertKV"
+                data = str(val1[0])+","+str(val1[1])
+                msg = header + "/" + oper + "/" + str(data)
                 sock.send(msg.encode())
+
                 buffer = sock.recv(4096).decode()
                 print(buffer)
 
         elif val[0] == "get" and conectado:
-            msg = "3;"+ val[1]
+            oper = "get"
+            data = str(val[1])
+            msg = header + "/" + oper + "/" + str(data)
             sock.send(msg.encode())
 
             buffer = sock.recv(4096).decode()
             print(buffer)
         elif val[0] == "peek" and conectado:
-            msg = "4;" + val[1]
+            oper = "peek"
+            data = str(val[1])
+            msg = header + "/" + oper + "/" + str(data)
             sock.send(msg.encode())
 
             buffer = sock.recv(4096).decode()
             print(buffer)
         elif val[0] == "update" and conectado:
             val1 = val[1].split(",")
-            msg = "5;" + val1[0] + ";" + val1[1] + ")"
+            oper = "update"
+            data = str(val1[0]) + "," + str(val1[1])
+            msg = header + "/" + oper + "/" + str(data)
             sock.send(msg.encode())
 
             buffer = sock.recv(4096).decode()
             print(buffer)
         elif val[0] == "delete" and conectado:
-            msg = "6;" + val[1]
+            oper = "delete"
+            data = str(val[1])
+            msg = header + "/" + oper + "/" + str(data)
             sock.send(msg.encode())
 
             buffer = sock.recv(4096).decode()
             print(buffer)
+        elif val[0]=="quit":
+            break
         else:
             print("Comando invalido")
 
+if conectado:
+    sock.shutdown(socket.SHUT_RDWR)
+    sock.close()
