@@ -47,7 +47,7 @@ while cmd != "quit":
         sock.send(msg.encode())
 
         buffer = sock.recv(4096).decode()
-        print(buffer)                                                       #NO ESTOY SEGURO SI ES ASI
+        print(buffer)
 
     #si no es ninguno de los anteriores, significa que el comando es del tipo cmd(a) o cmd(a,b)
     else:
@@ -65,6 +65,11 @@ while cmd != "quit":
 
             elif len(val1) == 2:
                 oper = "insertKV"
+                try:
+                    int(val1[0])
+                except:
+                    print ("Error: las llaves deben ser valores numericos")
+                    continue
                 data = str(val1[0])+","+str(val1[1])
                 msg = header + "/" + oper + "/" + str(data)
                 sock.send(msg.encode())
@@ -74,6 +79,11 @@ while cmd != "quit":
 
         elif val[0] == "get" and conectado:
             oper = "get"
+            try:
+                int(val[1])
+            except:
+                print ("Error: las llaves deben ser valores numericos")
+                continue
             data = str(val[1])
             msg = header + "/" + oper + "/" + str(data)
             sock.send(msg.encode())
@@ -81,6 +91,11 @@ while cmd != "quit":
             buffer = sock.recv(4096).decode()
             print(buffer)
         elif val[0] == "peek" and conectado:
+            try:
+                int(val[1])
+            except:
+                print ("Error: las llaves deben ser valores numericos")
+                continue
             oper = "peek"
             data = str(val[1])
             msg = header + "/" + oper + "/" + str(data)
@@ -90,6 +105,11 @@ while cmd != "quit":
             print(buffer)
         elif val[0] == "update" and conectado:
             val1 = val[1].split(",")
+            try:
+                int(val1[0])
+            except:
+                print ("Error: las llaves deben ser valores numericos")
+                continue
             oper = "update"
             data = str(val1[0]) + "," + str(val1[1])
             msg = header + "/" + oper + "/" + str(data)
@@ -98,6 +118,11 @@ while cmd != "quit":
             buffer = sock.recv(4096).decode()
             print(buffer)
         elif val[0] == "delete" and conectado:
+            try:
+                int(val[1])
+            except:
+                print ("Error: las llaves deben ser valores numericos")
+                continue
             oper = "delete"
             data = str(val[1])
             msg = header + "/" + oper + "/" + str(data)
@@ -111,5 +136,9 @@ while cmd != "quit":
             print("Comando invalido")
 
 if conectado:
+    oper = "close"
+    data = None
+    msg = header + "/" + oper + "/" + str(data)
+    sock.send(msg.encode())
     sock.shutdown(socket.SHUT_RDWR)
     sock.close()
