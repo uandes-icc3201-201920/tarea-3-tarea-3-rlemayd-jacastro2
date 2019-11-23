@@ -20,6 +20,7 @@ PORT = 8080
 
 # funcion de comunicacion cliente-servidor
 lock = _thread.allocate_lock()
+
 def server_cliente(conexion, dir_cl):
     conectado = False
     cnct_msj = conexion.recv(
@@ -27,7 +28,7 @@ def server_cliente(conexion, dir_cl):
     cnct_msj = cnct_msj.split("/")
     #si el mansaje inicial es connect, ser inicia la coneccion del cliente
     if cnct_msj[1] == "connect":
-        print("Se ha conectado un cliente!")
+        print("Se ha conectado el cliente",dir_cl[0])
         conectado = True
     else:
         return None
@@ -36,8 +37,13 @@ def server_cliente(conexion, dir_cl):
     while conectado:
         mensaje = conexion.recv(1024).decode()
         mensaje = mensaje.split("/")
-        if mensaje[1] == "insert":
+
+        if mensaje[1] == "close":
+            print("Se ha desconectado el cliente",dir_cl[0])
+            conectado = False
+        elif mensaje[1] == "insert":
             #se genera la entrada en la base de datos con el valor entregado
+            lock.acquire()              #Para bloquear entrada en la seccion critica
             val = mensaje[2]
             global KEY
             if KEY in BD:
@@ -46,10 +52,13 @@ def server_cliente(conexion, dir_cl):
 
             BD[KEY] = val
             state = "211"
-            body = "Se ha insertado el valor {} con la key {}".format(val,KEY)
+            body = "Se ha insertado el valor \"{}\" con la key \"{}\"".format(val,KEY)
             msj = state+"/"+header+"/"+body
             conexion.sendall(msj.encode())
+            print("Cliente",dir_cl[0],", a guardado el valor","\""+str(val)+"\"","en la base de datos con key","\""+str(KEY)+"\"")
+            lock.release()          #Para finalizar el bloqueo de la seccion critica
         elif mensaje[1] == "insertKV":
+            lock.acquire()  # Para bloquear entrada en la seccion critica
             kv = mensaje[2].split(",")
             try:
                 key = int(kv[0])
@@ -63,13 +72,16 @@ def server_cliente(conexion, dir_cl):
             if key not in BD:
                 BD[key] = val
                 state = "210"
-                body = "Se ha insertado el valor {} con la key {}".format(val,key)
+                body = "Se ha insertado el valor \"{}\" con la key \"{}\"".format(val,key)
             else:
                 state = "410"
                 body = "Error de insercion, key ya existente"
             msj = state + "/" + header + "/" + body
             conexion.sendall(msj.encode())
+            print("Cliente",dir_cl[0],", a guardado el valor","\""+str(val)+"\"","en la base de datos con key","\""+str(key)+"\"")
+            lock.release()  # Para finalizar el bloqueo de la seccion critica
         elif mensaje[1] == "peek":
+            lock.acquire()  # Para bloquear entrada en la seccion critica
             try:
                 key = int(mensaje[2])
             except:
@@ -80,13 +92,16 @@ def server_cliente(conexion, dir_cl):
                 continue
             if key in BD:
                 state = "230"
-                body = "key existente"
+                body = "True"
             else:
                 state = "420"
-                body = "key inexistente"
+                body = "False"
             msj = state + "/" + header + "/" + body
             conexion.sendall(msj.encode())
+            print("Cliente",dir_cl[0],", a pedido verificar la llave","\""+str(key)+"\"","en la base de datos")
+            lock.release()  # Para finalizar el bloqueo de la seccion critica
         elif mensaje[1] == "get":
+            lock.acquire()  # Para bloquear entrada en la seccion critica
             try:
                 key = int(mensaje[2])
             except:
@@ -103,7 +118,10 @@ def server_cliente(conexion, dir_cl):
                 body = "Error, key inexistente"
             msj = state + "/" + header + "/" + body
             conexion.sendall(msj.encode())
+            print("Cliente",dir_cl[0],", a pedido obtener el valor de la llave","\""+str(key)+"\"","en la base de datos")
+            lock.release()  # Para finalizar el bloqueo de la seccion critica
         elif mensaje[1] == "update":
+            lock.acquire()  # Para bloquear entrada en la seccion critica
             kv = mensaje[2].split(",")
             try:
                 key = int(kv[0])
@@ -118,13 +136,16 @@ def server_cliente(conexion, dir_cl):
                 pval = BD[key]
                 BD[key] = val
                 state = "240"
-                body = "Se ha cambiado el valor {} por {}, en la key {}".format(pval, val, key)
+                body = "Se ha cambiado el valor \"{}\" por \"{}\", en la key \"{}\"".format(pval, val, key)
             else:
                 state = "420"
                 body = "Error, key inexistente"
             msj = state + "/" + header + "/" + body
             conexion.sendall(msj.encode())
+            print("Cliente", dir_cl[0], ", a pedido actualizar el valor de la llave", "\""+str(key)+"\"", "en la base de datos")
+            lock.release()  # Para finalizar el bloqueo de la seccion critica
         elif mensaje[1] == "delete":
+            lock.acquire()  # Para bloquear entrada en la seccion critica
             try:
                 key = int(mensaje[2])
             except:
@@ -137,13 +158,16 @@ def server_cliente(conexion, dir_cl):
                 eval = BD[key]
                 BD.pop(key)
                 state = "250"
-                body = "se ha eliminado el valor {} presente en la key {}".format(eval, key)
+                body = "se ha eliminado el valor \"{}\" junto a su key \"{}\"".format(eval, key)
             else:
                 state = "420"
                 body = "Error, key inexistente"
             msj = state + "/" + header + "/" + body
             conexion.sendall(msj.encode())
+            print("Cliente", dir_cl[0], ", a pedido eliminar la llave", "\""+str(key)+"\" junto a su key","\""+str(eval)+"\"", "en la base de datos")
+            lock.release()  # Para finalizar el bloqueo de la seccion critica
         elif mensaje[1] == "list":
+            lock.acquire()  # Para bloquear entrada en la seccion critica
             body = ""
             for k in BD:
                 body += str(k)
@@ -151,6 +175,9 @@ def server_cliente(conexion, dir_cl):
             state = "260"
             msj = state + "/" + header + "/" + body
             conexion.sendall(msj.encode())
+            print("Cliente", dir_cl[0], ", a pedido listado de la base de datos")
+            lock.release()  # Para finalizar el bloqueo de la seccion critica
+
     return None
 
 

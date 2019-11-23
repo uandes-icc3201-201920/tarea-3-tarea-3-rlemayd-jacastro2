@@ -29,111 +29,127 @@ while cmd != "quit":
             print("Conexión exitosa con el servidor!")
             conectado = True
             sock.send(msg.encode())
+    if conectado == True:
+        if cmd == "disconnect" and conectado:                      #veo si el comando del usuario es disconnect
+            oper = "disconnect"
+            data = None
+            msg = header + "/" + oper + "/" + str(data)
+            sock.send(msg.encode())
+            sock.close()
+            conectado = False;
+            print("Socket desconectado!")
 
-    elif cmd == "disconnect" and conectado:                      #veo si el comando del usuario es disconnect
-        oper = "disconnect"
-        data = None
-        msg = header + "/" + oper + "/" + str(data)
-        sock.send(msg.encode())
-        sock.close()
-        conectado = False;
-        print("Socket desconectado!")
+        elif cmd == "list" and conectado:                            #veo si el comando del usuairo es list
+            print("Lista de claves:")
+            oper = "list"
+            data = None
+            msg = header + "/" + oper + "/" + str(data)
+            sock.send(msg.encode())
 
-    elif cmd == "list" and conectado:                            #veo si el comando del usuairo es list
-        print("Lista de claves:")
-        oper = "list"
-        data = None
-        msg = header + "/" + oper + "/" + str(data)
-        sock.send(msg.encode())
+            buffer = sock.recv(4096).decode()
+            buff = buffer.split("/")
+            buffL = buff[2].strip(",").split(",")
+            buffFinal = ""
+            for t in buffL:
+                buffFinal += (str(t)+"\n")
+            buffFinal+="Fin de lista de claves"
+            print(buffFinal)
 
-        buffer = sock.recv(4096).decode()
-        print(buffer)
+        #si no es ninguno de los anteriores, significa que el comando es del tipo cmd(a) o cmd(a,b)
+        else:
+            val = cmd.strip(")").split("(")
+            if val[0] == "insert" and conectado:
+                val1 = val[1].split(",")
+                if len(val1) == 1:
+                    oper = "insert"
+                    data = str(val1[0])
+                    msg = header + "/" + oper + "/" + str(data)
+                    sock.send(msg.encode())
 
-    #si no es ninguno de los anteriores, significa que el comando es del tipo cmd(a) o cmd(a,b)
-    else:
-        val = cmd.strip(")").split("(")
-        if val[0] == "insert" and conectado:
-            val1 = val[1].split(",")
-            if len(val1) == 1:
-                oper = "insert"
-                data = str(val1[0])
+                    buffer = sock.recv(4096).decode()
+                    buff = buffer.split("/")
+                    print(buff[2])
+
+                elif len(val1) == 2:
+                    oper = "insertKV"
+                    try:
+                        int(val1[0])
+                    except:
+                        print ("Error: las llaves deben ser valores numericos")
+                        continue
+                    data = str(val1[0])+","+str(val1[1])
+                    msg = header + "/" + oper + "/" + str(data)
+                    sock.send(msg.encode())
+
+                    buffer = sock.recv(4096).decode()
+                    buff = buffer.split("/")
+                    print(buff[2])
+
+            elif val[0] == "get" and conectado:
+                oper = "get"
+                try:
+                    int(val[1])
+                except:
+                    print ("Error: las llaves deben ser valores numericos")
+                    continue
+                data = str(val[1])
                 msg = header + "/" + oper + "/" + str(data)
                 sock.send(msg.encode())
 
                 buffer = sock.recv(4096).decode()
-                print(buffer)
+                buff = buffer.split("/")
+                print("El valor pedido por la llave",val[1],"es:",buff[2])
+            elif val[0] == "peek" and conectado:
+                try:
+                    int(val[1])
+                except:
+                    print ("Error: las llaves deben ser valores numericos")
+                    continue
+                oper = "peek"
+                data = str(val[1])
+                msg = header + "/" + oper + "/" + str(data)
+                sock.send(msg.encode())
 
-            elif len(val1) == 2:
-                oper = "insertKV"
+                buffer = sock.recv(4096).decode()
+                buff = buffer.split("/")
+                print(buff[2])
+            elif val[0] == "update" and conectado:
+                val1 = val[1].split(",")
                 try:
                     int(val1[0])
                 except:
                     print ("Error: las llaves deben ser valores numericos")
                     continue
-                data = str(val1[0])+","+str(val1[1])
+                oper = "update"
+                data = str(val1[0]) + "," + str(val1[1])
                 msg = header + "/" + oper + "/" + str(data)
                 sock.send(msg.encode())
 
                 buffer = sock.recv(4096).decode()
-                print(buffer)
+                buff = buffer.split("/")
+                print(buff[2])
+            elif val[0] == "delete" and conectado:
+                try:
+                    int(val[1])
+                except:
+                    print ("Error: las llaves deben ser valores numericos")
+                    continue
+                oper = "delete"
+                data = str(val[1])
+                msg = header + "/" + oper + "/" + str(data)
+                sock.send(msg.encode())
 
-        elif val[0] == "get" and conectado:
-            oper = "get"
-            try:
-                int(val[1])
-            except:
-                print ("Error: las llaves deben ser valores numericos")
-                continue
-            data = str(val[1])
-            msg = header + "/" + oper + "/" + str(data)
-            sock.send(msg.encode())
-
-            buffer = sock.recv(4096).decode()
-            print(buffer)
-        elif val[0] == "peek" and conectado:
-            try:
-                int(val[1])
-            except:
-                print ("Error: las llaves deben ser valores numericos")
-                continue
-            oper = "peek"
-            data = str(val[1])
-            msg = header + "/" + oper + "/" + str(data)
-            sock.send(msg.encode())
-
-            buffer = sock.recv(4096).decode()
-            print(buffer)
-        elif val[0] == "update" and conectado:
-            val1 = val[1].split(",")
-            try:
-                int(val1[0])
-            except:
-                print ("Error: las llaves deben ser valores numericos")
-                continue
-            oper = "update"
-            data = str(val1[0]) + "," + str(val1[1])
-            msg = header + "/" + oper + "/" + str(data)
-            sock.send(msg.encode())
-
-            buffer = sock.recv(4096).decode()
-            print(buffer)
-        elif val[0] == "delete" and conectado:
-            try:
-                int(val[1])
-            except:
-                print ("Error: las llaves deben ser valores numericos")
-                continue
-            oper = "delete"
-            data = str(val[1])
-            msg = header + "/" + oper + "/" + str(data)
-            sock.send(msg.encode())
-
-            buffer = sock.recv(4096).decode()
-            print(buffer)
-        elif val[0]=="quit":
-            break
-        else:
-            print("Comando invalido")
+                buffer = sock.recv(4096).decode()
+                buff = buffer.split("/")
+                print(buff[2])
+            elif val[0]=="quit":
+                break
+            else:
+                if val[0]!="connect":
+                    print("Comando invalido")
+    else:
+        if cmd!="quit":
+            print("Para realizar una operación primero debes conectarte al server, con el comando connect")
 
 if conectado:
     oper = "close"
