@@ -3,8 +3,10 @@ import sys
 
 
 cmd = ""#string de la linea de comandos
-opt = socket.gethostname()
-sock_dir = socket.gethostbyname(opt)
+info = socket.gethostbyname_ex(socket.gethostname())
+cl_name = info[0]
+cl_dir = info[-1][0]
+sock_dir = info[-1][1]
 PORT = 42069
 conectado = False
 
@@ -12,7 +14,7 @@ if "-s" in sys.argv:
     idx = sys.argv.index("-s")
     sock_dir = sys.argv[idx+1]
 
-header = str(PORT)+","+str(sock_dir)
+header = str(PORT)+","+str(cl_dir)
 while cmd != "quit":
 
     cmd = input(">")

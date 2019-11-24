@@ -13,14 +13,14 @@ BD = {}
 ####FUNCIONAMIENTO DE SERVIDOR####
 
 # parametros del servidor
-host = socket.gethostname()
-DIR = socket.gethostbyname(host)
-print(DIR)
+info = socket.gethostbyname_ex(socket.gethostname())
+SV_DIR = info[-1][1]
 PORT = 42069
+print("server ip:",SV_DIR)
 
 if "-s" in sys.argv:
     idx = sys.argv.index("-s")
-    DIR = sys.argv[idx+1]
+    SV_DIR = sys.argv[idx + 1]
 
 # funcion de comunicacion cliente-servidor
 lock = _thread.allocate_lock()
@@ -31,12 +31,12 @@ def server_cliente(conexion, dir_cl):
     cnct_msj = cnct_msj.split("/")
     #si el mansaje inicial es connect, ser inicia la coneccion del cliente
     if cnct_msj[1] == "connect":
-        print("Se ha conectado el cliente",dir_cl[0])
+        print("Se ha conectado el cliente",cnct_msj[0].split(",")[1])
         conectado = True
     else:
         return None
 
-    header = str(DIR)+","+str(PORT)+","+str(dir_cl)
+    header = str(SV_DIR) + "," + str(PORT) + "," + str(dir_cl)
     while conectado:
         try:
             mensaje = conexion.recv(1024).decode()
@@ -195,7 +195,7 @@ def server_cliente(conexion, dir_cl):
 
 #### inicio del proceso servidor ####
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # creamos el socket
-sock.bind((DIR, PORT))
+sock.bind((SV_DIR, PORT))
 print("server iniciado...")
 
 # inicio de procesamiento de clientes
