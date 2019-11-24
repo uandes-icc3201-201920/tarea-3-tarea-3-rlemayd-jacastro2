@@ -23,8 +23,7 @@ lock = _thread.allocate_lock()
 
 def server_cliente(conexion, dir_cl):
     conectado = False
-    cnct_msj = conexion.recv(
-        1024).decode()  # se recibe un mensaje inicial de coneccion, si el mensaje es "conectado" se procede con la coneccion, de otro modo el proceso termina
+    cnct_msj = conexion.recv(1024).decode()  # se recibe un mensaje inicial de coneccion, si el mensaje es "conectado" se procede con la coneccion, de otro modo el proceso termina
     cnct_msj = cnct_msj.split("/")
     #si el mansaje inicial es connect, ser inicia la coneccion del cliente
     if cnct_msj[1] == "connect":
@@ -35,11 +34,16 @@ def server_cliente(conexion, dir_cl):
 
     header = str(DIR)+","+str(PORT)+","+str(dir_cl)
     while conectado:
-        mensaje = conexion.recv(1024).decode()
+        try:
+            mensaje = conexion.recv(1024).decode()
+        except:
+            print("Error de conexion con el cliente!")
+            conectado = False
+            break
         mensaje = mensaje.split("/")
-
         if mensaje[1] == "close":
-            print("Se ha desconectado el cliente",dir_cl[0])
+            conexion.close()
+            print("El cliente se ha desconectado de manera abrupta")
             conectado = False
         elif mensaje[1] == "insert":
             #se genera la entrada en la base de datos con el valor entregado
@@ -64,7 +68,7 @@ def server_cliente(conexion, dir_cl):
                 key = int(kv[0])
             except:
                 state = "430"
-                body = "Error, key invalida"
+                body = "Key invalida"
                 msj = state + "/" + header + "/" + body
                 conexion.sendall(msj.encode())
                 continue
@@ -75,7 +79,7 @@ def server_cliente(conexion, dir_cl):
                 body = "Se ha insertado el valor \"{}\" con la key \"{}\"".format(val,key)
             else:
                 state = "410"
-                body = "Error de insercion, key ya existente"
+                body = "Key ya existente"
             msj = state + "/" + header + "/" + body
             conexion.sendall(msj.encode())
             print("Cliente",dir_cl[0],", a guardado el valor","\""+str(val)+"\"","en la base de datos con key","\""+str(key)+"\"")
@@ -86,7 +90,7 @@ def server_cliente(conexion, dir_cl):
                 key = int(mensaje[2])
             except:
                 state = "430"
-                body = "Error, key invalida"
+                body = "Key invalida"
                 msj = state + "/" + header + "/" + body
                 conexion.sendall(msj.encode())
                 continue
@@ -106,7 +110,7 @@ def server_cliente(conexion, dir_cl):
                 key = int(mensaje[2])
             except:
                 state = "430"
-                body = "Error, key invalida"
+                body = "Key invalida"
                 msj = state + "/" + header + "/" + body
                 conexion.sendall(msj.encode())
                 continue
@@ -115,7 +119,7 @@ def server_cliente(conexion, dir_cl):
                 body = BD[key]
             else:
                 state = "420"
-                body = "Error, key inexistente"
+                body = "Key inexistente"
             msj = state + "/" + header + "/" + body
             conexion.sendall(msj.encode())
             print("Cliente",dir_cl[0],", a pedido obtener el valor de la llave","\""+str(key)+"\"","en la base de datos")
@@ -177,6 +181,10 @@ def server_cliente(conexion, dir_cl):
             conexion.sendall(msj.encode())
             print("Cliente", dir_cl[0], ", a pedido listado de la base de datos")
             lock.release()  # Para finalizar el bloqueo de la seccion critica
+        elif mensaje[1] == "disconnect":
+            conexion.close()
+            print("El cliente se ha desconectado")
+            conectado = False
 
     return None
 

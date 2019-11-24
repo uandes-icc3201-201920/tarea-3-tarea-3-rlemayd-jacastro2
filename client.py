@@ -1,5 +1,5 @@
 import socket
-
+import sys
 
 DIR =  "/tmp/db.tuples.sock"                #direccion predeterminada del socket
 
@@ -40,7 +40,7 @@ while cmd != "quit":
             print("Socket desconectado!")
 
         elif cmd == "list" and conectado:                            #veo si el comando del usuairo es list
-            print("Lista de claves:")
+
             oper = "list"
             data = None
             msg = header + "/" + oper + "/" + str(data)
@@ -48,15 +48,23 @@ while cmd != "quit":
 
             buffer = sock.recv(4096).decode()
             buff = buffer.split("/")
-            buffL = buff[2].strip(",").split(",")
-            buffFinal = ""
-            for t in buffL:
-                buffFinal += (str(t)+"\n")
-            buffFinal+="Fin de lista de claves"
-            print(buffFinal)
+
+            if len(buff[2]) > 0:
+                buffL = buff[2].strip(",").split(",")
+                buffFinal = ""
+                for t in buffL:
+                    buffFinal += (str(t)+"\n")
+                buffFinal+="Fin de lista de claves"
+                print("Lista de claves:")
+                print(buffFinal)
+            else:
+                print("No hay elementos en la base de datos!")
 
         #si no es ninguno de los anteriores, significa que el comando es del tipo cmd(a) o cmd(a,b)
         else:
+            if "(" not in cmd and ")" not in cmd:
+                print("comando invalido")
+                continue
             val = cmd.strip(")").split("(")
             if val[0] == "insert" and conectado:
                 val1 = val[1].split(",")
@@ -83,7 +91,13 @@ while cmd != "quit":
 
                     buffer = sock.recv(4096).decode()
                     buff = buffer.split("/")
-                    print(buff[2])
+                    code = buff[0]
+                    if code == "210":
+                        print(buff[2])
+                    elif code == "410":
+                        print("ERROR 410:", buff[2])
+                    elif code == "430":
+                        print("ERROR 430:", buff[2])
 
             elif val[0] == "get" and conectado:
                 oper = "get"
@@ -98,7 +112,14 @@ while cmd != "quit":
 
                 buffer = sock.recv(4096).decode()
                 buff = buffer.split("/")
-                print("El valor pedido por la llave",val[1],"es:",buff[2])
+                code = buff[0]
+                if code == "210":
+                    print("El valor pedido por la llave",val[1],"es:",buff[2])
+                elif code == "410":
+                    print("ERROR 410:", buff[2])
+                elif code == "430":
+                    print("ERROR 430:", buff[2])
+
             elif val[0] == "peek" and conectado:
                 try:
                     int(val[1])
@@ -112,7 +133,14 @@ while cmd != "quit":
 
                 buffer = sock.recv(4096).decode()
                 buff = buffer.split("/")
-                print(buff[2])
+                code = buff[0]
+                if code == "230":
+                    print(buff[2])
+                elif code == "420":
+                    print(buff[2])
+                    print("Error 420: clave inexistente")
+                elif code == "430":
+                    print("Error 430: clave invalida")
             elif val[0] == "update" and conectado:
                 val1 = val[1].split(",")
                 try:
@@ -127,7 +155,13 @@ while cmd != "quit":
 
                 buffer = sock.recv(4096).decode()
                 buff = buffer.split("/")
-                print(buff[2])
+                code = buff[0]
+                if code == "210":
+                    print(buff[2])
+                elif code == "410":
+                    print("ERROR 410:", buff[2])
+                elif code == "430":
+                    print("ERROR 430:", buff[2])
             elif val[0] == "delete" and conectado:
                 try:
                     int(val[1])
@@ -141,7 +175,13 @@ while cmd != "quit":
 
                 buffer = sock.recv(4096).decode()
                 buff = buffer.split("/")
-                print(buff[2])
+                code = buff[0]
+                if code == "210":
+                    print(buff[2])
+                elif code == "410":
+                    print("ERROR 410:", buff[2])
+                elif code == "430":
+                    print("ERROR 430:", buff[2])
             elif val[0]=="quit":
                 break
             else:
