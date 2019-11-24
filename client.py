@@ -10,7 +10,7 @@ conectado = False
 
 if "-s" in sys.argv:
     idx = sys.argv.index("-s")
-    DIR = sys.argv[idx+1]
+    sock_dir = sys.argv[idx+1]
 
 header = str(PORT)+","+str(sock_dir)
 while cmd != "quit":

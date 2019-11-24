@@ -15,6 +15,7 @@ BD = {}
 # parametros del servidor
 host = socket.gethostname()
 DIR = socket.gethostbyname(host)
+print(DIR)
 PORT = 42069
 
 if "-s" in sys.argv:
