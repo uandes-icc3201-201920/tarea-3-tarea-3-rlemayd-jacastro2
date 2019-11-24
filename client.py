@@ -5,11 +5,9 @@ DIR =  "/tmp/db.tuples.sock"                #direccion predeterminada del socket
 
 
 cmd = ""                                    #string de la linea de comandos
-sflag = 0                                   #flag que nos dice si el usuario define un socket distinto al predeterminado
 opt = socket.gethostname()
 sock_dir = socket.gethostbyname(opt)
-PORT = 8080
-sock = 0                                    #numero en el cual guardaremos el valor que nos retorne la funcion socket()
+PORT = 69420
 conectado = False
 header = str(PORT)+","+str(sock_dir)
 while cmd != "quit":
