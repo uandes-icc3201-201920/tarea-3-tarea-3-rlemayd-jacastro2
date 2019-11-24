@@ -1,14 +1,17 @@
 import socket
 import sys
 
-DIR =  "/tmp/db.tuples.sock"                #direccion predeterminada del socket
 
-
-cmd = ""                                    #string de la linea de comandos
+cmd = ""#string de la linea de comandos
 opt = socket.gethostname()
 sock_dir = socket.gethostbyname(opt)
-PORT = 69420
+PORT = 42069
 conectado = False
+
+if "-s" in sys.argv:
+    idx = sys.argv.index("-s")
+    DIR = sys.argv[idx+1]
+
 header = str(PORT)+","+str(sock_dir)
 while cmd != "quit":
 
@@ -20,21 +23,20 @@ while cmd != "quit":
             print("Ya estas conectado al servidor")
         else:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        #Creamos el socket
-            cliente_addr = (sock_dir, PORT)
-            sock.connect(cliente_addr)
+            sock.connect((sock_dir, PORT))
 
             msg = header+"/"+oper+"/"+str(data)
             print("Conexión exitosa con el servidor!")
             conectado = True
             sock.send(msg.encode())
-    if conectado == True:
+    elif conectado == True:
         if cmd == "disconnect" and conectado:                      #veo si el comando del usuario es disconnect
             oper = "disconnect"
             data = None
             msg = header + "/" + oper + "/" + str(data)
             sock.send(msg.encode())
             sock.close()
-            conectado = False;
+            conectado = False
             print("Socket desconectado!")
 
         elif cmd == "list" and conectado:                            #veo si el comando del usuairo es list

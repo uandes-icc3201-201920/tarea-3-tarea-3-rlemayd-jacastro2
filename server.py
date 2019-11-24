@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-
+import sys
 import socket
 import _thread
 
-# BASE DE DATOS
+#### BASE DE DATOS ####
 import random
 
 KEY = random.randint(1000, 10001)
@@ -15,8 +15,11 @@ BD = {}
 # parametros del servidor
 host = socket.gethostname()
 DIR = socket.gethostbyname(host)
-PORT = 69420
+PORT = 42069
 
+if "-s" in sys.argv:
+    idx = sys.argv.index("-s")
+    DIR = sys.argv[idx+1]
 
 # funcion de comunicacion cliente-servidor
 lock = _thread.allocate_lock()
@@ -189,11 +192,9 @@ def server_cliente(conexion, dir_cl):
     return None
 
 
-# inicio del proceso servidor
+#### inicio del proceso servidor ####
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # creamos el socket
-
-svr_addr = (DIR, PORT)
-sock.bind(svr_addr)
+sock.bind((DIR, PORT))
 print("server iniciado...")
 
 # inicio de procesamiento de clientes
