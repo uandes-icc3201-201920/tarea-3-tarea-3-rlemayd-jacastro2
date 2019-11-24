@@ -15,7 +15,7 @@ BD = {}
 # parametros del servidor
 host = socket.gethostname()
 DIR = socket.gethostbyname(host)
-PORT = 8080
+PORT = 69420
 
 
 # funcion de comunicacion cliente-servidor
