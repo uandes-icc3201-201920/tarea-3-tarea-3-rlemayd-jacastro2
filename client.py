@@ -41,6 +41,9 @@ while cmd != "quit":
             conectado = False
             print("Socket desconectado!")
 
+        elif cmd == "quit":
+            break
+
         elif cmd == "list" and conectado:                            #veo si el comando del usuairo es list
 
             oper = "list"
@@ -115,9 +118,9 @@ while cmd != "quit":
                 buffer = sock.recv(4096).decode()
                 buff = buffer.split("/")
                 code = buff[0]
-                if code == "210":
+                if code == "220":
                     print("El valor pedido por la llave",val[1],"es:",buff[2])
-                elif code == "410":
+                elif code == "420":
                     print("ERROR 410:", buff[2])
                 elif code == "430":
                     print("ERROR 430:", buff[2])
@@ -158,10 +161,10 @@ while cmd != "quit":
                 buffer = sock.recv(4096).decode()
                 buff = buffer.split("/")
                 code = buff[0]
-                if code == "210":
+                if code == "240":
                     print(buff[2])
-                elif code == "410":
-                    print("ERROR 410:", buff[2])
+                elif code == "420":
+                    print("ERROR 420:", buff[2])
                 elif code == "430":
                     print("ERROR 430:", buff[2])
             elif val[0] == "delete" and conectado:
@@ -178,14 +181,13 @@ while cmd != "quit":
                 buffer = sock.recv(4096).decode()
                 buff = buffer.split("/")
                 code = buff[0]
-                if code == "210":
+                if code == "250":
                     print(buff[2])
-                elif code == "410":
+                elif code == "420":
                     print("ERROR 410:", buff[2])
                 elif code == "430":
                     print("ERROR 430:", buff[2])
-            elif val[0]=="quit":
-                break
+
             else:
                 if val[0]!="connect":
                     print("Comando invalido")
