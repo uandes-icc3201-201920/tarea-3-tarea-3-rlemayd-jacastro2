@@ -6,13 +6,17 @@ cmd = ""#string de la linea de comandos
 info = socket.gethostbyname_ex(socket.gethostname())
 cl_name = info[0]
 cl_dir = info[-1][0]
-sock_dir = info[-1][1]
+sock_dir = info[-1][-1]
 PORT = 42069
 conectado = False
+variable=False
 
 if "-s" in sys.argv:
     idx = sys.argv.index("-s")
     sock_dir = sys.argv[idx+1]
+else:
+    variable = True
+
 
 header = str(PORT)+","+str(cl_dir)
 while cmd != "quit":
@@ -21,11 +25,17 @@ while cmd != "quit":
     if cmd == "connect":       #veo si el comando del usuario es connect
         oper = "connect"
         data = None
+        if variable:
+            sock_dir = input("Ingrese la direccion IP del server: ")
         if conectado == 1:
             print("Ya estas conectado al servidor")
         else:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        #Creamos el socket
-            sock.connect((sock_dir, PORT))
+            try:
+                sock.connect((sock_dir, PORT))
+            except:
+                print("Ingrese una IP correcta")
+                continue
 
             msg = header+"/"+oper+"/"+str(data)
             print("Conexión exitosa con el servidor!")
@@ -121,7 +131,7 @@ while cmd != "quit":
                 if code == "220":
                     print("El valor pedido por la llave",val[1],"es:",buff[2])
                 elif code == "420":
-                    print("ERROR 410:", buff[2])
+                    print("ERROR 420:", buff[2])
                 elif code == "430":
                     print("ERROR 430:", buff[2])
 
@@ -148,6 +158,9 @@ while cmd != "quit":
                     print("Error 430: clave invalida")
             elif val[0] == "update" and conectado:
                 val1 = val[1].split(",")
+                if len(val1)!=2:
+                    print("Se deben insertar 2 valores para el update")
+                    continue
                 try:
                     int(val1[0])
                 except:
@@ -184,7 +197,7 @@ while cmd != "quit":
                 if code == "250":
                     print(buff[2])
                 elif code == "420":
-                    print("ERROR 410:", buff[2])
+                    print("ERROR 420:", buff[2])
                 elif code == "430":
                     print("ERROR 430:", buff[2])
 

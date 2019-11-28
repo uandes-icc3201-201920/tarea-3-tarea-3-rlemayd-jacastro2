@@ -13,7 +13,7 @@ BD = {}
 
 # parametros del servidor
 info = socket.gethostbyname_ex(socket.gethostname())
-SV_DIR = info[-1][1]
+SV_DIR = info[-1][-1]
 PORT = 42069
 print("server ip:",SV_DIR)
 
@@ -40,13 +40,13 @@ def server_cliente(conexion, dir_cl):
         try:
             mensaje = conexion.recv(1024).decode()
         except:
-            print("Error de conexion con el cliente!")
+            print("Error de conexión con el cliente!")
             conectado = False
             break
         mensaje = mensaje.split("/")
         if mensaje[1] == "close":
             conexion.close()
-            print("El cliente se ha desconectado de manera abrupta")
+            print("El cliente",mensaje[0].split(",")[1],"se ha desconectado")
             conectado = False
         elif mensaje[1] == "insert":
             #se genera la entrada en la base de datos con el valor entregado
@@ -101,7 +101,7 @@ def server_cliente(conexion, dir_cl):
                 state = "230"
                 body = "True"
             else:
-                state = "420"
+                state = "230"
                 body = "False"
             msj = state + "/" + header + "/" + body
             conexion.sendall(msj.encode())
@@ -134,7 +134,7 @@ def server_cliente(conexion, dir_cl):
                 key = int(kv[0])
             except:
                 state = "430"
-                body = "Error, key invalida"
+                body = "Key invalida"
                 msj = state + "/" + header + "/" + body
                 conexion.sendall(msj.encode())
                 continue
@@ -146,7 +146,7 @@ def server_cliente(conexion, dir_cl):
                 body = "Se ha cambiado el valor \"{}\" por \"{}\", en la key \"{}\"".format(pval, val, key)
             else:
                 state = "420"
-                body = "Error, key inexistente"
+                body = "Key inexistente"
             msj = state + "/" + header + "/" + body
             conexion.sendall(msj.encode())
             print("Cliente", dir_cl[0], ", a pedido actualizar el valor de la llave", "\""+str(key)+"\"", "en la base de datos")
@@ -157,7 +157,7 @@ def server_cliente(conexion, dir_cl):
                 key = int(mensaje[2])
             except:
                 state = "430"
-                body = "Error, key invalida"
+                body = "Key invalida"
                 msj = state + "/" + header + "/" + body
                 conexion.sendall(msj.encode())
                 continue
@@ -165,10 +165,10 @@ def server_cliente(conexion, dir_cl):
                 eval = BD[key]
                 BD.pop(key)
                 state = "250"
-                body = "se ha eliminado el valor \"{}\" junto a su key \"{}\"".format(eval, key)
+                body = "Se ha eliminado el valor \"{}\" junto a su key \"{}\"".format(eval, key)
             else:
                 state = "420"
-                body = "Error, key inexistente"
+                body = "Key inexistente"
             msj = state + "/" + header + "/" + body
             conexion.sendall(msj.encode())
             print("Cliente", dir_cl[0], ", a pedido eliminar la llave", "\""+str(key)+"\" junto a su key","\""+str(eval)+"\"", "en la base de datos")
