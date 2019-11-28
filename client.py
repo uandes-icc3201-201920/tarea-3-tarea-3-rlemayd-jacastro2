@@ -20,7 +20,6 @@ else:
 
 header = str(PORT)+","+str(cl_dir)
 while cmd != "quit":
-
     cmd = input(">")
     if cmd == "connect":       #veo si el comando del usuario es connect
         oper = "connect"
@@ -40,13 +39,23 @@ while cmd != "quit":
             msg = header+"/"+oper+"/"+str(data)
             print("Conexión exitosa con el servidor!")
             conectado = True
-            sock.send(msg.encode())
+            try:
+                sock.send(msg.encode())
+            except:
+                print ("Error de conexion, se perdio la conexion con el servidor, vuelva a conectarse a un servidor disponible")
+                conectado = False
+                continue
     elif conectado == True:
         if cmd == "disconnect" and conectado:                      #veo si el comando del usuario es disconnect
             oper = "disconnect"
             data = None
             msg = header + "/" + oper + "/" + str(data)
-            sock.send(msg.encode())
+            try:
+                sock.send(msg.encode())
+            except:
+                print ("Error de conexion, se perdio la conexion con el servidor, vuelva a conectarse a un servidor disponible")
+                conectado = False
+                continue
             sock.close()
             conectado = False
             print("Socket desconectado!")
@@ -59,7 +68,12 @@ while cmd != "quit":
             oper = "list"
             data = None
             msg = header + "/" + oper + "/" + str(data)
-            sock.send(msg.encode())
+            try:
+                sock.send(msg.encode())
+            except:
+                print ("Error de conexion, se perdio la conexion con el servidor, vuelva a conectarse a un servidor disponible")
+                conectado = False
+                continue
 
             buffer = sock.recv(4096).decode()
             buff = buffer.split("/")
@@ -80,6 +94,9 @@ while cmd != "quit":
             if "(" not in cmd and ")" not in cmd:
                 print("comando invalido")
                 continue
+            if cmd[-1] != ')':
+                print("comando invalido")
+                continue
             val = cmd.strip(")").split("(")
             if val[0] == "insert" and conectado:
                 val1 = val[1].split(",")
@@ -87,7 +104,12 @@ while cmd != "quit":
                     oper = "insert"
                     data = str(val1[0])
                     msg = header + "/" + oper + "/" + str(data)
-                    sock.send(msg.encode())
+                    try:
+                        sock.send(msg.encode())
+                    except:
+                        print ("Error de conexion, se perdio la conexion con el servidor, vuelva a conectarse a un servidor disponible")
+                        conectado = False
+                        continue
 
                     buffer = sock.recv(4096).decode()
                     buff = buffer.split("/")
@@ -102,7 +124,12 @@ while cmd != "quit":
                         continue
                     data = str(val1[0])+","+str(val1[1])
                     msg = header + "/" + oper + "/" + str(data)
-                    sock.send(msg.encode())
+                    try:
+                        sock.send(msg.encode())
+                    except:
+                        print ("Error de conexion, se perdio la conexion con el servidor, vuelva a conectarse a un servidor disponible")
+                        conectado = False
+                        continue
 
                     buffer = sock.recv(4096).decode()
                     buff = buffer.split("/")
@@ -113,9 +140,15 @@ while cmd != "quit":
                         print("ERROR 410:", buff[2])
                     elif code == "430":
                         print("ERROR 430:", buff[2])
-
+                else:
+                    print("ERROR: el comando insert solo acepta 1 o 2 valores")
+                    continue
             elif val[0] == "get" and conectado:
                 oper = "get"
+                vals = val[1].split(",")
+                if len(vals) != 1:
+                    print("ERROR: el comando get solo requiere 1 parametro")
+                    continue
                 try:
                     int(val[1])
                 except:
@@ -123,7 +156,12 @@ while cmd != "quit":
                     continue
                 data = str(val[1])
                 msg = header + "/" + oper + "/" + str(data)
-                sock.send(msg.encode())
+                try:
+                    sock.send(msg.encode())
+                except:
+                    print ("Error de conexion, se perdio la conexion con el servidor, vuelva a conectarse a un servidor disponible")
+                    conectado = False
+                    continue
 
                 buffer = sock.recv(4096).decode()
                 buff = buffer.split("/")
@@ -136,6 +174,10 @@ while cmd != "quit":
                     print("ERROR 430:", buff[2])
 
             elif val[0] == "peek" and conectado:
+                vals = val[1].split(",")
+                if len(vals) != 1:
+                    print("ERROR: el comando peek solo requiere 1 parametro")
+                    continue
                 try:
                     int(val[1])
                 except:
@@ -144,7 +186,12 @@ while cmd != "quit":
                 oper = "peek"
                 data = str(val[1])
                 msg = header + "/" + oper + "/" + str(data)
-                sock.send(msg.encode())
+                try:
+                    sock.send(msg.encode())
+                except:
+                    print ("Error de conexion, se perdio la conexion con el servidor, vuelva a conectarse a un servidor disponible")
+                    conectado = False
+                    continue
 
                 buffer = sock.recv(4096).decode()
                 buff = buffer.split("/")
@@ -159,7 +206,7 @@ while cmd != "quit":
             elif val[0] == "update" and conectado:
                 val1 = val[1].split(",")
                 if len(val1)!=2:
-                    print("Se deben insertar 2 valores para el update")
+                    print("ERROR: el comando update solo acepta 2 valores")
                     continue
                 try:
                     int(val1[0])
@@ -169,7 +216,12 @@ while cmd != "quit":
                 oper = "update"
                 data = str(val1[0]) + "," + str(val1[1])
                 msg = header + "/" + oper + "/" + str(data)
-                sock.send(msg.encode())
+                try:
+                    sock.send(msg.encode())
+                except:
+                    print ("Error de conexion, se perdio la conexion con el servidor, vuelva a conectarse a un servidor disponible")
+                    conectado = False
+                    continue
 
                 buffer = sock.recv(4096).decode()
                 buff = buffer.split("/")
@@ -181,6 +233,10 @@ while cmd != "quit":
                 elif code == "430":
                     print("ERROR 430:", buff[2])
             elif val[0] == "delete" and conectado:
+                vals = val[1].split(",")
+                if len(vals) != 1:
+                    print("ERROR: el comando delete solo requiere 1 parametro")
+                    continue
                 try:
                     int(val[1])
                 except:
@@ -189,7 +245,12 @@ while cmd != "quit":
                 oper = "delete"
                 data = str(val[1])
                 msg = header + "/" + oper + "/" + str(data)
-                sock.send(msg.encode())
+                try:
+                    sock.send(msg.encode())
+                except:
+                    print ("Error de conexion, se perdio la conexion con el servidor, vuelva a conectarse a un servidor disponible")
+                    conectado = False
+                    continue
 
                 buffer = sock.recv(4096).decode()
                 buff = buffer.split("/")
@@ -212,6 +273,10 @@ if conectado:
     oper = "close"
     data = None
     msg = header + "/" + oper + "/" + str(data)
-    sock.send(msg.encode())
-    sock.shutdown(socket.SHUT_RDWR)
-    sock.close()
+    try:
+        sock.send(msg.encode())
+        sock.shutdown(socket.SHUT_RDWR)
+        sock.close()
+    except:
+        print ("Error de conexion, se perdio la conexion con el servidor, vuelva a conectarse a un servidor disponible")
+        conectado = False
