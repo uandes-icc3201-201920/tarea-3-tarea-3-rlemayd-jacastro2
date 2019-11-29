@@ -15,6 +15,7 @@ BD = {}
 info = socket.gethostbyname_ex(socket.gethostname())
 SV_DIR = info[-1][-1]
 PORT = 42069
+clientes_activos = 0
 print("server ip:",SV_DIR)
 
 if "-s" in sys.argv:
@@ -25,6 +26,7 @@ if "-s" in sys.argv:
 lock = _thread.allocate_lock()
 
 def server_cliente(conexion, dir_cl):
+    global clientes_activos
     conectado = False
     cnct_msj = conexion.recv(1024).decode()  # se recibe un mensaje inicial de coneccion, si el mensaje es "conectado" se procede con la coneccion, de otro modo el proceso termina
     cnct_msj = cnct_msj.split("/")
@@ -41,12 +43,14 @@ def server_cliente(conexion, dir_cl):
             mensaje = conexion.recv(1024).decode()
         except:
             print("Error de conexión con el cliente!")
+            clientes_activos -= 1
             conectado = False
             break
         mensaje = mensaje.split("/")
         if mensaje[1] == "close":
             conexion.close()
-            print("El cliente",mensaje[0].split(",")[1],"se ha desconectado")
+            print("Se ha perdido la conexión con el cliente",mensaje[0].split(",")[1])
+            clientes_activos -= 1
             conectado = False
         elif mensaje[1] == "insert":
             #se genera la entrada en la base de datos con el valor entregado
@@ -185,11 +189,13 @@ def server_cliente(conexion, dir_cl):
             print("Cliente", dir_cl[0], ", a pedido listado de la base de datos")
             lock.release()  # Para finalizar el bloqueo de la seccion critica
         elif mensaje[1] == "disconnect":
+            clientes_activos -= 1
             conexion.close()
-            print("El cliente se ha desconectado")
+            print("El cliente", mensaje[0].split(",")[1],"se ha desconectado del servidor")
             conectado = False
 
     return None
+
 
 
 #### inicio del proceso servidor ####
@@ -201,4 +207,6 @@ print("server iniciado...")
 sock.listen()
 while 1:
     conn, cl_addr = sock.accept()
+    clientes_activos += 1
     _thread.start_new_thread(server_cliente, (conn, cl_addr))
+
